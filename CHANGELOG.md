@@ -5,8 +5,9 @@
 - **Ready-made downloads** for Windows, macOS (Apple Silicon) and Linux that
   need no Python: unpack, run `vlc-autosubs install`, done. "Offline" builds
   also include the `small` Whisper model.
-- **Install with uv**: `uv tool install git+https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs`,
-  then `vlc-autosubs install`. uv picks a suitable Python by itself.
+- **Install with uv**: `uv tool install https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs/archive/refs/heads/main.zip`,
+  then `vlc-autosubs install`. uv picks a suitable Python by itself, and
+  Git isn't needed.
 - The code is now a regular Python package (`src/vlc_autosubs`, managed with
   `pyproject.toml` and `uv.lock`) instead of a zip file.
 - New commands: `vlc-autosubs doctor` checks that everything works, and

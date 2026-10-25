@@ -59,18 +59,26 @@ Intel Macs: use Option 2.
 
 ### Option 2: install with uv
 
-[uv](https://docs.astral.sh/uv/getting-started/installation/) installs
-AutoSubs in its own environment and fetches a suitable Python if needed, so
-the Python setup already on your computer doesn't matter.
+[uv](https://docs.astral.sh/uv/) installs AutoSubs in its own environment
+and fetches a suitable Python if needed, so the Python setup already on your
+computer doesn't matter. Git is not needed.
 
-```
-uv tool install git+https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs
-vlc-autosubs install
-```
+1. Install uv (one time), then open a **new** terminal:
+   - Windows (PowerShell):
+     `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`
+   - macOS / Linux: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+2. Quit VLC, then:
+   ```
+   uv tool install https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs/archive/refs/heads/main.zip
+   vlc-autosubs install
+   ```
+   If `vlc-autosubs` isn't found, run `uv tool update-shell`, open a new
+   terminal and try again.
 
-To update: `uv tool upgrade vlc-autosubs`, then run `vlc-autosubs install` again.
-To install a specific release instead of the latest code, add its tag:
-`uv tool install git+https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs@v1.1.0`
+To update to the latest code, run the first command again with
+`--reinstall --refresh` added, then `vlc-autosubs install` again. To install a
+specific release instead, use its tag's zip, for example
+`https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs/archive/refs/tags/v1.1.0.zip`.
 
 This is also the way to go for **NVIDIA GPUs**: with CUDA 12 and cuDNN 9
 installed, AutoSubs uses the GPU and the more accurate `large-v3` model by

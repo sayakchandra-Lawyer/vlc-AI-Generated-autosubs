@@ -74,7 +74,7 @@ def find_helper():
     if not os.path.exists(helper):
         raise InstallError(
             f"{helper} not found. Install AutoSubs as a package first, e.g.\n"
-            "  uv tool install git+https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs")
+            "  uv tool install https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs/archive/refs/heads/main.zip")
     return helper
 
 
