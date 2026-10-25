@@ -237,8 +237,22 @@ def resolve_model(name):
     return name
 
 
+MODEL_SIZES = {"tiny": "75 MB", "base": "145 MB", "small": "480 MB",
+               "medium": "1.5 GB", "large-v3": "3 GB"}
+
+
+def quiet_huggingface():
+    """Hide two harmless Hugging Face warnings that read like errors: no
+    symlink support (normal on Windows; we keep one copy of each model, so
+    it costs no space) and the server's tip to log in for faster downloads.
+    Must run before huggingface_hub is imported."""
+    os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
+    os.environ.setdefault("HF_HUB_VERBOSITY", "error")
+
+
 def download_model(name, output_dir=None):
     """Fetch a faster-whisper model (into the Hugging Face cache by default)."""
+    quiet_huggingface()
     from faster_whisper import download_model as fw_download
     return fw_download(name, output_dir=output_dir)
 
@@ -360,6 +374,7 @@ def run(job_file):
     if sys.stderr is None:
         sys.stderr = log_file
     os.environ.setdefault("HF_HUB_DISABLE_PROGRESS_BARS", "1")
+    quiet_huggingface()
 
     def log(msg):
         log_file.write(time.strftime("%H:%M:%S ") + msg + "\n")

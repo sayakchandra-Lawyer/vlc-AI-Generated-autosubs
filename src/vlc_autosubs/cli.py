@@ -16,6 +16,12 @@ def _pause_if_double_clicked(argv):
         input("\nPress Enter to close this window…")
 
 
+def _download(model):
+    size = helper.MODEL_SIZES.get(model, "")
+    print(f"\ndownloading Whisper model '{model}' ({size}); this can take a while…")
+    print(f"done, saved to {helper.download_model(model)}")
+
+
 def main(argv=None):
     argv = sys.argv[1:] if argv is None else argv
     ap = argparse.ArgumentParser(
@@ -48,8 +54,7 @@ def main(argv=None):
         if args.command == "install":
             installer.install(model=args.model, manual_only=args.manual_only)
             if args.download_model:
-                print(f"downloading model '{args.download_model}'…")
-                print("saved to", helper.download_model(args.download_model))
+                _download(args.download_model)
         elif args.command == "uninstall":
             installer.uninstall()
         elif args.command == "doctor":
@@ -63,7 +68,7 @@ def main(argv=None):
             if not ok:
                 sys.exit(1)
         elif args.command == "download-model":
-            print("saved to", helper.download_model(args.model))
+            _download(args.model)
         elif args.command == "run-job":
             helper.main([args.job])
     except installer.InstallError as e:

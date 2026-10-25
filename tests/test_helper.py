@@ -101,3 +101,22 @@ def test_downloadable_build_stays_on_cpu(monkeypatch):
     monkeypatch.setattr("sys.frozen", True, raising=False)
     model, device, compute = helper.pick_model({}, lambda msg: None)
     assert (model, device, compute) == ("small", "cpu", "int8")
+
+
+def test_harmless_huggingface_warnings_are_hidden():
+    # Needs a fresh interpreter: the settings apply when huggingface_hub loads.
+    import subprocess
+    import sys
+    code = (
+        "import os\n"
+        "for k in ('HF_HUB_DISABLE_SYMLINKS_WARNING', 'HF_HUB_VERBOSITY'):\n"
+        "    os.environ.pop(k, None)\n"
+        "from vlc_autosubs import helper\n"
+        "helper.quiet_huggingface()\n"
+        "import logging\n"
+        "from huggingface_hub import constants\n"
+        "from huggingface_hub.utils import logging as hf_logging\n"
+        "assert constants.HF_HUB_DISABLE_SYMLINKS_WARNING\n"
+        "assert hf_logging.get_logger('huggingface_hub').getEffectiveLevel() >= logging.ERROR\n"
+    )
+    subprocess.run([sys.executable, "-c", code], check=True)
