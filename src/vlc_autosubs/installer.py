@@ -4,6 +4,7 @@ import os
 import platform
 import re
 import shutil
+import subprocess
 import sys
 from importlib import resources
 
@@ -51,6 +52,11 @@ def autosubs_root():
 
 def conf_path():
     return os.path.join(autosubs_root(), "autosubs.conf")
+
+
+def installed_cli():
+    """Where the `vlc-autosubs` command of an installed download lives."""
+    return os.path.join(autosubs_root(), "app", _exe("vlc-autosubs"))
 
 
 def _exe(name):
@@ -186,10 +192,14 @@ def install(model=None, manual_only=False):
 
     if FROZEN:
         _install_bundle()
-    old_venv = os.path.join(autosubs_root(), "venv")  # made by AutoSubs 1.0
+    # Leftovers from AutoSubs 1.0, which had its own Python environment.
+    old_venv = os.path.join(autosubs_root(), "venv")
     if os.path.isdir(old_venv):
         shutil.rmtree(old_venv, ignore_errors=True)
         print(f"removed the old Python environment {old_venv}")
+    old_helper = os.path.join(autosubs_root(), "vlc_autosubs.py")
+    if os.path.exists(old_helper):
+        os.remove(old_helper)
     settings = read_conf()
     settings.pop("python", None)  # used by AutoSubs 1.0
     settings["helper"] = find_helper()
@@ -203,6 +213,11 @@ def install(model=None, manual_only=False):
     print("\nDone. Start VLC and play a video" +
           ("." if manual_only else " — English subtitles appear automatically.") +
           "\nManual mode: View > Auto English Subtitles (macOS: VLC > Extensions).")
+    if FROZEN:
+        cli = installed_cli()
+        print(f"\nAutoSubs is now installed in {os.path.dirname(cli)}; you can delete "
+              f"the downloaded folder.\nTo check or remove it later, run:\n"
+              f'  "{cli}" doctor\n  "{cli}" uninstall')
 
 
 def uninstall():
@@ -213,11 +228,24 @@ def uninstall():
             os.remove(path)
             print(f"removed {path}")
     root = autosubs_root()
+    edit_vlcrc(False)
     if os.path.isdir(root):
         shutil.rmtree(root, ignore_errors=True)
-        if os.path.exists(root):
+        if os.path.exists(root) and _running_from(root) and SYSTEM == "Windows":
+            # Windows can't delete the running program; finish once we exit.
+            subprocess.Popen(
+                f'cmd /c ping -n 3 127.0.0.1 >nul & rmdir /s /q "{root}"',
+                cwd=os.environ.get("TEMP") or os.path.expanduser("~"),
+                creationflags=subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP)
+            print(f"removing {root} (finishes a few seconds after this window closes)")
+        elif os.path.exists(root):
             print(f"could not remove all of {root}; delete it by hand after quitting VLC")
         else:
             print(f"removed {root}")
-    edit_vlcrc(False)
-    print("Python packages are not removed; with uv: uv tool uninstall vlc-autosubs")
+    if not FROZEN:
+        print("To remove the program itself too: uv tool uninstall vlc-autosubs")
+
+
+def _running_from(folder):
+    exe = os.path.normcase(os.path.abspath(sys.executable))
+    return FROZEN and exe.startswith(os.path.normcase(os.path.abspath(folder)) + os.sep)

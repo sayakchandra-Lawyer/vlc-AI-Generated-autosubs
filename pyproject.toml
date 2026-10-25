@@ -26,21 +26,25 @@ Homepage = "https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs"
 Issues = "https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs/issues"
 
 [project.scripts]
-# For users
 vlc-autosubs = "vlc_autosubs.cli:main"
-# For developers (need the dev dependency group: `uv sync` installs it)
-autosubs-build = "vlc_autosubs.devtools:build_main"
-autosubs-reproduce = "vlc_autosubs.devtools:reproduce_main"
 
 [project.gui-scripts]
 # What VLC starts in the background; a windowless launcher on Windows.
 vlc-autosubs-helper = "vlc_autosubs.helper:main"
 
 [dependency-groups]
+# `uv sync` / `uv run` install these in a checkout. The build commands
+# (`uv run autosubs-build`, `uv run autosubs-reproduce`) come from devtools/.
 dev = [
     "pytest>=8",
-    "pyinstaller>=6.10",
+    "autosubs-devtools",
 ]
+
+[tool.uv.workspace]
+members = ["devtools"]
+
+[tool.uv.sources]
+autosubs-devtools = { workspace = true }
 
 [build-system]
 requires = ["hatchling>=1.26"]

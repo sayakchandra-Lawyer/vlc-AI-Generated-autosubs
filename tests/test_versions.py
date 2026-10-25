@@ -19,3 +19,10 @@ def test_lua_extension_version_matches():
 def test_changelog_has_this_version_first():
     first = re.search(r"^## (\S+)", read("CHANGELOG.md"), re.M).group(1)
     assert first == __version__
+
+
+def test_users_only_get_the_vlc_autosubs_commands():
+    tomllib = __import__("pytest").importorskip("tomllib")
+    project = tomllib.loads(read("pyproject.toml"))["project"]
+    assert set(project["scripts"]) == {"vlc-autosubs"}
+    assert set(project["gui-scripts"]) == {"vlc-autosubs-helper"}

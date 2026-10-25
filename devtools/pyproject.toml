@@ -1,0 +1,27 @@
+# Build and release tools for AutoSubs. A uv workspace member, so the
+# commands work in a checkout (`uv run autosubs-build`) without being
+# installed for people who only use AutoSubs.
+[project]
+name = "autosubs-devtools"
+version = "1.0.0"
+description = "Build and release tools for AutoSubs"
+requires-python = ">=3.10"
+dependencies = [
+    "vlc-autosubs",
+    "pyinstaller>=6.10",
+    "packaging>=24",
+]
+
+[project.scripts]
+autosubs-build = "autosubs_devtools:build_main"
+autosubs-reproduce = "autosubs_devtools:reproduce_main"
+
+[tool.uv.sources]
+vlc-autosubs = { workspace = true }
+
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/autosubs_devtools"]

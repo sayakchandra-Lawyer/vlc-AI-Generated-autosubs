@@ -11,10 +11,13 @@
   `pyproject.toml` and `uv.lock`) instead of a zip file.
 - New commands: `vlc-autosubs doctor` checks that everything works, and
   `vlc-autosubs download-model` fetches a model ahead of time.
-- Windows: no more console window while subtitles are being generated.
+- Fixed: on Windows, the helper could crash the first time it downloaded a
+  model (its progress bar had no console to write to).
+- Upgrading from 1.0 removes its private Python environment (~1 GB).
 - For developers: `uv run autosubs-build` makes a standalone build,
   `uv run autosubs-reproduce v1.1.0` rebuilds a release from its locked
-  dependencies, and tests run with `uv run pytest`.
+  dependencies, and tests run with `uv run pytest` on Windows, macOS and
+  Linux in CI. Bug reports have an issue template.
 - Upgrading from 1.0: run the new installer; the old `install.py` and its
   private virtualenv are no longer used.
 

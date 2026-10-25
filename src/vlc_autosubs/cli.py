@@ -2,6 +2,7 @@
 
 import argparse
 import sys
+import traceback
 
 from vlc_autosubs import __version__, helper, installer
 
@@ -67,6 +68,13 @@ def main(argv=None):
             helper.main([args.job])
     except installer.InstallError as e:
         print(f"error: {e}", file=sys.stderr)
+        _pause_if_double_clicked(argv)
+        sys.exit(1)
+    except Exception:
+        # Keep a double-clicked window open long enough to read what broke.
+        if not (installer.FROZEN and not argv):
+            raise
+        traceback.print_exc()
         _pause_if_double_clicked(argv)
         sys.exit(1)
     _pause_if_double_clicked(argv)

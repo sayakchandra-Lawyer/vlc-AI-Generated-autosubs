@@ -201,6 +201,10 @@ def write_srt(path, cues):
 def pick_model(job, log):
     import ctranslate2
     device = job.get("device", "auto")
+    if device == "auto" and getattr(sys, "frozen", False):
+        # The downloadable builds don't ship CUDA's libraries; trying the GPU
+        # would fetch the 3 GB large-v3 model only to fall back to the CPU.
+        device = "cpu"
     if device == "auto":
         try:
             device = "cuda" if ctranslate2.get_cuda_device_count() > 0 else "cpu"
@@ -348,6 +352,14 @@ def run(job_file):
     media = job["media"]
     status = Status(os.path.join(jobs_dir, job_id + ".status"))
     log_file = open(os.path.join(jobs_dir, job_id + ".log"), "a", encoding="utf-8")
+    # Started without a console (Windows), stdout/stderr are None and any
+    # library that prints, like the model download's progress bar, crashes.
+    # Send that output to the job's log instead, and skip progress bars.
+    if sys.stdout is None:
+        sys.stdout = log_file
+    if sys.stderr is None:
+        sys.stderr = log_file
+    os.environ.setdefault("HF_HUB_DISABLE_PROGRESS_BARS", "1")
 
     def log(msg):
         log_file.write(time.strftime("%H:%M:%S ") + msg + "\n")

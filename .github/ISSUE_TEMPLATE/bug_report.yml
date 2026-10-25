@@ -1,0 +1,45 @@
+name: Bug report
+description: Subtitles don't appear, an error shows up, or something else is broken
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How did you install AutoSubs?
+      options:
+        - Download from the Releases page (standard)
+        - Download from the Releases page (offline)
+        - uv tool install
+        - From a checkout (uv run)
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Operating system and VLC version
+      placeholder: e.g. Windows 11, VLC 3.0.21
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `vlc-autosubs doctor`
+      description: >
+        Downloaded builds: run the installed copy, whose path the installer
+        printed (see the README's Troubleshooting section).
+      render: text
+  - type: textarea
+    id: log
+    attributes:
+      label: Last lines of the log file
+      description: >
+        From the `autosubs/jobs` folder (see "Where things are" in the README).
+        Please remove anything you'd rather not share, such as file names.
+      render: text

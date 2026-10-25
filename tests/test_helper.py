@@ -71,3 +71,33 @@ def test_doctor_checks_the_speech_stack(sample_wav):
     assert results["voice detection"][0], results
     assert results["audio decoding"][0], results
     assert "20.0 s" in results["audio decoding"][1]
+
+
+def test_job_survives_missing_console(tmp_path, monkeypatch, sample_wav):
+    """Windows starts the helper without a console: stdout/stderr are None,
+    and the model download's progress bar used to crash on that."""
+    def chatty_translate(media):
+        from huggingface_hub.utils import tqdm
+        bar = tqdm(total=1, desc="model.bin", disable=False)
+        bar.update(1)
+        bar.close()
+        print("printed by a library")
+        yield "fr", 0.99, 6.0
+        yield 0.0, 2.0, "Hello"
+
+    monkeypatch.setattr(helper, "fake_translate", chatty_translate)
+    monkeypatch.setattr("sys.stdout", None)
+    monkeypatch.setattr("sys.stderr", None)
+    jobs, status = _run_job(tmp_path, monkeypatch, sample_wav)
+    assert status["state"] == "done", status
+    assert "printed by a library" in (jobs / "abc_film.log").read_text(encoding="utf-8")
+
+
+def test_downloadable_build_stays_on_cpu(monkeypatch):
+    # The builds ship no CUDA libraries, so "auto" must not pick the GPU.
+    import ctranslate2
+    monkeypatch.setattr(ctranslate2, "get_cuda_device_count", lambda: 1)
+    assert helper.pick_model({}, lambda msg: None)[1] == "cuda"  # not frozen
+    monkeypatch.setattr("sys.frozen", True, raising=False)
+    model, device, compute = helper.pick_model({}, lambda msg: None)
+    assert (model, device, compute) == ("small", "cpu", "int8")

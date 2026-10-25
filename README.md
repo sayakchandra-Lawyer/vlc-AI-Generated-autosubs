@@ -47,7 +47,15 @@ Unpack it, then:
 - **Linux:** in the unpacked folder, run `./vlc-autosubs install`
 
 The installer copies AutoSubs into VLC's folder, so you can delete the
-download afterwards. Intel Macs: use Option 2.
+download afterwards. The `vlc-autosubs` command used below then lives at:
+
+| | Installed command |
+| --- | --- |
+| Windows | `"%APPDATA%\vlc\autosubs\app\vlc-autosubs.exe"` |
+| macOS | `~/"Library/Application Support/org.videolan.vlc/autosubs/app/vlc-autosubs"` |
+| Linux | `~/.local/share/vlc/autosubs/app/vlc-autosubs` |
+
+Intel Macs: use Option 2.
 
 ### Option 2: install with uv
 
@@ -61,6 +69,8 @@ vlc-autosubs install
 ```
 
 To update: `uv tool upgrade vlc-autosubs`, then run `vlc-autosubs install` again.
+To install a specific release instead of the latest code, add its tag:
+`uv tool install git+https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs@v1.1.0`
 
 This is also the way to go for **NVIDIA GPUs**: with CUDA 12 and cuDNN 9
 installed, AutoSubs uses the GPU and the more accurate `large-v3` model by
@@ -68,7 +78,8 @@ itself. The downloadable builds run on the CPU.
 
 ### After installing
 
-Start VLC and play a video. To check that everything is in order, run:
+Start VLC and play a video. To check that everything is in order, run
+(downloads: use the installed command from the table above):
 
 ```
 vlc-autosubs doctor            # or: vlc-autosubs doctor "some video.mkv"
@@ -174,7 +185,12 @@ are kept in the Hugging Face cache (`~/.cache/huggingface`).
 - **Only local files** are supported, not streams, DVDs or network URLs.
 - **Windows:** paths with characters outside your system's code page (for
   example Japanese file names on an English Windows) may fail, because VLC 3's
-  Lua can't pass them to other programs. Rename the file if that happens.
+  Lua can't pass them to other programs. Rename the file if that happens. A
+  black window may flash for a moment when a video starts; that's VLC
+  starting the helper.
+- **Antivirus warnings (Windows):** programs packaged with PyInstaller, like
+  the downloads, are sometimes flagged by mistake. If yours blocks AutoSubs,
+  use Option 2, which runs the same code from source.
 
 ### Turning automatic mode on by hand
 
@@ -187,7 +203,7 @@ and restart VLC.
 ## Uninstall
 
 ```
-vlc-autosubs uninstall
+vlc-autosubs uninstall              # downloads: the installed command from the table above
 uv tool uninstall vlc-autosubs      # only if you used Option 2
 ```
 
@@ -204,8 +220,9 @@ src/vlc_autosubs/
   cli.py          the `vlc-autosubs` command
   installer.py    copies the Lua scripts into VLC, edits vlcrc
   helper.py       the background job: Whisper → .srt snapshots
-  devtools.py     build and reproduce commands
   lua/            the VLC side (interface script, extension, shared module)
+devtools/         build and release commands (a uv workspace member, so
+                  people installing AutoSubs don't get them)
 tests/            pytest suite (uses a stand-in for Whisper, no model needed)
 ```
 

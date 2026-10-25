@@ -37,9 +37,12 @@ def test_vlcrc_keeps_other_interfaces(tmp_path):
 
 def test_upgrade_from_1_0_drops_old_python_setting(fake_home):
     os.makedirs(os.path.join(installer.autosubs_root(), "venv", "bin"))
+    with open(os.path.join(installer.autosubs_root(), "vlc_autosubs.py"), "w") as f:
+        f.write("# AutoSubs 1.0 helper\n")
     with open(installer.conf_path(), "w", encoding="utf-8") as f:
         f.write("python=/old/venv/bin/python\nmodel=small\n")
     installer.install(manual_only=True)
     conf = installer.read_conf()
     assert "python" not in conf and conf["model"] == "small" and "helper" in conf
     assert not os.path.exists(os.path.join(installer.autosubs_root(), "venv"))
+    assert not os.path.exists(os.path.join(installer.autosubs_root(), "vlc_autosubs.py"))
