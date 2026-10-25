@@ -1,0 +1,56 @@
+[project]
+name = "vlc-autosubs"
+dynamic = ["version"]
+description = "Automatic English subtitles for VLC: local Whisper speech translation for ~99 languages."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Sayak Chandra" }]
+requires-python = ">=3.10"
+keywords = ["vlc", "subtitles", "whisper", "translation", "speech-to-text", "srt"]
+classifiers = [
+    "Environment :: Plugins",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Topic :: Multimedia :: Video",
+]
+dependencies = [
+    "faster-whisper>=1.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs"
+Issues = "https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs/issues"
+
+[project.scripts]
+# For users
+vlc-autosubs = "vlc_autosubs.cli:main"
+# For developers (need the dev dependency group: `uv sync` installs it)
+autosubs-build = "vlc_autosubs.devtools:build_main"
+autosubs-reproduce = "vlc_autosubs.devtools:reproduce_main"
+
+[project.gui-scripts]
+# What VLC starts in the background; a windowless launcher on Windows.
+vlc-autosubs-helper = "vlc_autosubs.helper:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pyinstaller>=6.10",
+]
+
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/vlc_autosubs/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vlc_autosubs"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

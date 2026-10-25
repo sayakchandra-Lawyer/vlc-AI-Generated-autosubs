@@ -1,0 +1,78 @@
+name: Release
+
+# Push a tag like v1.1.0 to build every download and publish a GitHub release.
+# "Run workflow" on the Actions tab builds them without releasing (for testing).
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        # ubuntu-22.04: an older glibc, so the Linux build runs on more distros.
+        # macos-14 runners are Apple Silicon; Intel Macs can use the uv install.
+        os: [windows-latest, macos-14, ubuntu-22.04]
+        model: ["", "small"]   # "" = standard build, "small" = offline build
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Check the tag matches the version
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          version=$(uv run --locked python -c "import vlc_autosubs; print(vlc_autosubs.__version__)")
+          test "v$version" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME != version $version"; exit 1; }
+
+      - run: uv run --locked pytest
+
+      - name: Build
+        shell: bash
+        run: uv run --locked autosubs-build ${{ matrix.model && format('--bundle-model {0}', matrix.model) || '' }}
+
+      - name: Smoke-test the build
+        shell: bash
+        run: |
+          mkdir smoke
+          case "$RUNNER_OS" in
+            Windows) unzip -q dist/*.zip -d smoke; exe=vlc-autosubs.exe ;;
+            *)       tar xzf dist/*.tar.gz -C smoke; exe=vlc-autosubs ;;
+          esac
+          smoke/vlc-autosubs-*/$exe --version
+          smoke/vlc-autosubs-*/$exe doctor
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.os }}-${{ matrix.model || 'standard' }}
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Release notes from CHANGELOG.md
+        run: |
+          awk -v v="${GITHUB_REF_NAME#v}" '
+            $0 ~ "^## " v " " {on=1; next}
+            on && /^## / {exit}
+            on {print}' CHANGELOG.md > notes.md
+          cat notes.md
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: AutoSubs ${{ github.ref_name }}
+          body_path: notes.md
+          files: dist/*

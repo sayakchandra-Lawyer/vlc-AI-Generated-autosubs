@@ -1,0 +1,25 @@
+# Python / uv
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# Build output (`uv run autosubs-build`)
+build/
+dist/
+
+# AutoSubs runtime files (never commit these)
+jobs/
+*.status
+*.log
+*.job
+
+# Generated subtitles and archives
+*.srt
+*.zip
+*.tar.gz
+
+# OS clutter
+.DS_Store
+Thumbs.db
+desktop.ini

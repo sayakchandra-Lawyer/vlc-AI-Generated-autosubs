@@ -1,105 +1,125 @@
 # AutoSubs — automatic English subtitles for VLC
 
+[![CI](https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs/actions/workflows/ci.yml/badge.svg)](https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs/actions/workflows/ci.yml)
+
 Play a video in French, Russian, Japanese, Czech or any of ~99 languages, and
 English subtitles show up on their own a few seconds later. They are made on
 your own computer with OpenAI's Whisper speech-translation model (through
-[faster-whisper](https://github.com/SYSTRAN/faster-whisper)). Nothing is uploaded.
+[faster-whisper](https://github.com/SYSTRAN/faster-whisper)). It's free, there
+are no accounts or API keys, and nothing is uploaded.
 
-## How it works
-
-VLC's Lua scripting can't read audio, so AutoSubs has two parts:
-
-1. **Lua scripts inside VLC** notice when a video starts, start the helper
-   in the background, and load its subtitles into the playing video.
-2. **A Python helper** (`vlc_autosubs.py`) runs Whisper with
-   `task="translate"`, which turns speech in any supported language straight
-   into English text.
-
-Subtitles arrive in parts: the first ~15 seconds come within moments, and
-later parts are loaded before playback reaches them. When the whole video is
-done, the subtitles are also saved next to it as `<video>.en.srt`, so VLC
-loads them instantly next time.
-
-Videos are skipped when they already have English subtitles (an `.en.srt`
-file or an English subtitle track), when the audio is English, or when they
-are audio-only.
+- Subtitles arrive in parts while you watch, ahead of playback.
+- Finished subtitles are saved next to the video as `<video>.en.srt`, so the
+  next playback is instant, and they also work in other players.
+- Videos that already have English subtitles or English audio are skipped.
 
 ## Install
 
-You need **VLC 3.x** and **Python 3.9 or newer**.
-Windows: get Python from python.org and tick "Add python.exe to PATH".
+Pick **one** of the two ways. Both need [VLC](https://www.videolan.org/) 3.x.
+Quit VLC before installing.
 
-1. **Quit VLC.**
-2. In this folder, run:
+### Option 1: download (no Python needed)
 
-   ```
-   python3 install.py            # Windows: py install.py
-   ```
+Get the file for your computer from the
+[latest release](https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs/releases/latest):
 
-   This copies the scripts into VLC's user folder, creates a private Python
-   environment with faster-whisper (about 200 MB download), and turns on
-   automatic mode in VLC's settings. A backup of your settings is saved as
-   `vlcrc.autosubs-backup`.
-3. Start VLC and play a video. The first time, the Whisper model downloads
-   (~500 MB for the default `small` model), so the first subtitles take
-   longer. To download it during install instead, add `--download-model small`.
+| Your computer | Standard | Offline (includes the `small` model) |
+| --- | --- | --- |
+| Windows 10/11 (64-bit) | `vlc-autosubs-<version>-windows-x64.zip` | `…-windows-x64-offline-small.zip` |
+| Mac with Apple Silicon (M1 or newer) | `vlc-autosubs-<version>-macos-arm64.tar.gz` | `…-macos-arm64-offline-small.tar.gz` |
+| Linux (64-bit) | `vlc-autosubs-<version>-linux-x64.tar.gz` | `…-linux-x64-offline-small.tar.gz` |
 
-Options:
+**Standard** (~150 MB) downloads the Whisper model the first time you play
+a video. **Offline** (~600 MB) already contains it, which is good for slow
+connections or computers that are never online.
 
-| Option | What it does |
-| --- | --- |
-| `--model medium` | choose the model (see below) |
-| `--manual-only` | don't turn on automatic mode; use the menu extension only |
-| `--python /path/to/python` | use an existing Python that has `faster-whisper` installed |
-| `--uninstall` | remove AutoSubs and turn automatic mode off |
+Unpack it, then:
 
-### Turning automatic mode on by hand
+- **Windows:** double-click `vlc-autosubs.exe`. If SmartScreen warns about an
+  unknown publisher, click *More info → Run anyway* (the app isn't
+  code-signed).
+- **macOS:** open Terminal in the unpacked folder and run
+  ```
+  xattr -dr com.apple.quarantine .
+  ./vlc-autosubs install
+  ```
+  The first command is needed because the app isn't notarized by Apple.
+- **Linux:** in the unpacked folder, run `./vlc-autosubs install`
 
-If you'd rather not let the installer edit VLC's settings: Tools → Preferences
-→ Show settings: **All** → Interface → Main interfaces → tick **Lua
-interpreter**. Then, under Main interfaces → Lua, set **Lua interface** to
-`autosubs`. Save and restart VLC.
+The installer copies AutoSubs into VLC's folder, so you can delete the
+download afterwards. Intel Macs: use Option 2.
+
+### Option 2: install with uv
+
+[uv](https://docs.astral.sh/uv/getting-started/installation/) installs
+AutoSubs in its own environment and fetches a suitable Python if needed, so
+the Python setup already on your computer doesn't matter.
+
+```
+uv tool install git+https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs
+vlc-autosubs install
+```
+
+To update: `uv tool upgrade vlc-autosubs`, then run `vlc-autosubs install` again.
+
+This is also the way to go for **NVIDIA GPUs**: with CUDA 12 and cuDNN 9
+installed, AutoSubs uses the GPU and the more accurate `large-v3` model by
+itself. The downloadable builds run on the CPU.
+
+### After installing
+
+Start VLC and play a video. To check that everything is in order, run:
+
+```
+vlc-autosubs doctor            # or: vlc-autosubs doctor "some video.mkv"
+```
+
+Install options: `--model medium` picks a model, `--manual-only` skips
+automatic mode, and `--download-model small` fetches a model right away.
+`vlc-autosubs --help` lists all commands.
 
 ## Using it
 
-- **Automatic mode** (default): just play videos. Status messages appear
-  in the top-right corner of the video.
+- **Automatic mode** (default): just play videos. Status messages appear in
+  the top-right corner of the video.
 - **Manual mode**: View → **Auto English Subtitles** (on macOS: VLC →
   Extensions). The window shows progress. **Generate / Refresh** starts or
-  retries the current video, even one that was skipped, and loads the newest
-  part of its subtitles.
+  retries the current video, even one that was skipped.
 
-As new parts load, VLC lists them as extra subtitle tracks (Subtitle → Sub
-Track). The newest one is selected automatically, and it always contains
-everything translated so far.
+As new parts of the subtitles load, VLC lists them as extra subtitle tracks
+(Subtitle → Sub Track). The newest one is selected automatically and always
+contains everything translated so far.
 
-When you switch to another video, the previous one's work stops so the new
-video gets the CPU. That video starts again from scratch the next time you
-play it.
+When you switch to another video, work on the previous one stops so the new
+video gets the CPU. The stopped video starts over the next time you play it.
 
 ## Choosing a model
-
-Edit `autosubs.conf` (see below), or reinstall with `--model`.
 
 | Model | Download | Quality | Notes |
 | --- | --- | --- | --- |
 | `tiny`, `base` | 75–150 MB | rough | for slow machines |
-| `small` | ~500 MB | decent | **default without a GPU** |
+| `small` | ~500 MB | decent | **default without a GPU**; in the offline builds |
 | `medium` | ~1.5 GB | good | CPU is fine if your machine is fast enough |
 | `large-v3` | ~3 GB | best | **default with an NVIDIA GPU** |
 
-Don't use `turbo` / `large-v3-turbo`: that model wasn't trained to translate
-and often answers in the original language. On CPU, `small` usually runs
-faster than real time. If subtitles can't keep up with playback, choose a
-smaller model.
+Change it with `vlc-autosubs install --model medium`, or in `autosubs.conf`.
+On a CPU, `small` usually runs faster than real time. If subtitles can't keep
+up with playback, choose a smaller model.
 
-**NVIDIA GPU:** faster-whisper needs CUDA 12 and cuDNN 9 (see faster-whisper's
-README). If the GPU can't be used, AutoSubs falls back to the CPU on its own.
+**Why only Whisper models?** AutoSubs needs *speech in any language → English
+text*, including languages like Japanese and Russian, on an ordinary computer.
+- English-only models (`small.en`, distil-whisper, Moonshine, …) and
+  `large-v3-turbo` can't translate at all.
+- Newer multilingual models either cover far fewer languages (NVIDIA Canary
+  and Parakeet, Voxtral), need a GPU, or have licenses that forbid commercial
+  use (SeamlessM4T).
+
+So Whisper remains the practical choice here.
 
 ## Settings: `autosubs.conf`
 
-The file lives in AutoSubs' folder (see "Where things are"). Write one
-`key=value` per line, then restart VLC.
+The file lives in AutoSubs' folder (see below). Write one `key=value` per
+line, then restart VLC.
 
 ```
 model=auto                # auto | tiny | base | small | medium | large-v3
@@ -109,8 +129,24 @@ write_sidecar=1           # save <video>.en.srt next to the video
 skip_english_audio=1
 skip_if_english_subs=1
 osd=1                     # on-screen status messages
-python=                   # custom Python executable (default: AutoSubs' venv)
+helper=…                  # set by `vlc-autosubs install`; don't edit
 ```
+
+## Supported platforms
+
+| Platform | Status |
+| --- | --- |
+| Linux, VLC 3.0.x from your distribution's packages | tested |
+| Windows 10/11 | should work — reports welcome |
+| macOS, Apple Silicon | should work — reports welcome |
+| macOS, Intel | uv install only |
+| Linux Snap/Flatpak VLC | not supported (sandboxed, can't start the helper) |
+| VLC 4 (beta) | not tested |
+
+Found a problem, or tried it on a platform listed as untested? Please
+[open an issue](https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs/issues)
+and include the output of `vlc-autosubs doctor` and the last lines of the log
+file (see Troubleshooting).
 
 ## Where things are
 
@@ -120,31 +156,83 @@ python=                   # custom Python executable (default: AutoSubs' venv)
 | AutoSubs | `%APPDATA%\vlc\autosubs\` | `~/Library/Application Support/org.videolan.vlc/autosubs/` | `~/.local/share/vlc/autosubs/` |
 
 Each video gets files in `autosubs/jobs/`: `.status`, `.log` and the `.srt`
-parts. You can delete that folder's contents at any time.
+parts. You can delete that folder's contents at any time. Downloaded models
+are kept in the Hugging Face cache (`~/.cache/huggingface`).
 
 ## Troubleshooting
 
+- **Run `vlc-autosubs doctor` first.** It checks the speech engine, voice
+  detection and (given a video) audio decoding.
 - **Nothing happens.** In VLC, open Tools → Messages, set verbosity to 2 and
-  look for lines with `autosubs`. If none appear, automatic mode isn't on.
-  Check the preferences above, or use manual mode.
+  look for lines with `autosubs`. If none appear, automatic mode isn't on:
+  run `vlc-autosubs install` again, or use manual mode.
 - **"error: …" on screen.** Read `autosubs/jobs/<video>.log`.
-  `ModuleNotFoundError: faster_whisper` means the helper is using the wrong
-  Python; re-run the installer, or set `python=` in `autosubs.conf`.
+- **"helper not found".** Run `vlc-autosubs install` again. This happens when
+  the uv environment was moved or removed.
 - **Snap/Flatpak VLC on Linux** is sandboxed and can't start the helper. Use
   your distribution's `vlc` package instead.
 - **Only local files** are supported, not streams, DVDs or network URLs.
 - **Windows:** paths with characters outside your system's code page (for
   example Japanese file names on an English Windows) may fail, because VLC 3's
-  Lua can't pass them to other programs. Rename the file if that happens. A
-  console window may also flash briefly when a video starts.
+  Lua can't pass them to other programs. Rename the file if that happens.
+
+### Turning automatic mode on by hand
+
+`vlc-autosubs install` does this for you (keeping a backup of VLC's settings
+as `vlcrc.autosubs-backup`). To do it yourself: Tools → Preferences → Show
+settings: **All** → Interface → Main interfaces → tick **Lua interpreter**.
+Then, under Main interfaces → Lua, set **Lua interface** to `autosubs`. Save
+and restart VLC.
 
 ## Uninstall
 
 ```
-python3 install.py --uninstall
+vlc-autosubs uninstall
+uv tool uninstall vlc-autosubs      # only if you used Option 2
 ```
 
 The `.en.srt` files saved next to your videos are kept.
+
+## For developers
+
+AutoSubs is a regular Python package managed with
+[uv](https://docs.astral.sh/uv/). Dependencies are pinned in `uv.lock`, and
+`.python-version` sets the Python used for development and builds.
+
+```
+src/vlc_autosubs/
+  cli.py          the `vlc-autosubs` command
+  installer.py    copies the Lua scripts into VLC, edits vlcrc
+  helper.py       the background job: Whisper → .srt snapshots
+  devtools.py     build and reproduce commands
+  lua/            the VLC side (interface script, extension, shared module)
+tests/            pytest suite (uses a stand-in for Whisper, no model needed)
+```
+
+| Command | What it does |
+| --- | --- |
+| `uv sync` | create `.venv` with the app and dev tools |
+| `uv run pytest` | run the tests |
+| `uv run vlc-autosubs install` | install your working copy into VLC (keep the checkout in place) |
+| `uv run autosubs-build` | standalone build for this platform → `dist/` |
+| `uv run autosubs-build --bundle-model small` | the same, with a model inside (offline build) |
+| `uv run autosubs-reproduce v1.1.0` | rebuild a tagged release from its locked dependencies → `dist/reproduced/` |
+
+Every build contains `BUILDINFO.txt` (version, commit, Python, platform) and
+`requirements.txt` with the exact package versions inside it.
+
+`AUTOSUBS_FAKE=1` replaces Whisper with a stand-in that writes dummy lines,
+which is handy for testing the VLC side without downloading a model.
+
+**Releasing:**
+1. Set the new version in `src/vlc_autosubs/__init__.py` and
+   `src/vlc_autosubs/lua/extensions/autosubs_ext.lua`, and add a section at
+   the top of `CHANGELOG.md`. The tests fail if these don't match.
+2. Commit and push.
+3. Push a tag: `git tag v1.1.0 && git push origin v1.1.0`
+
+GitHub Actions then builds all six downloads, smoke-tests each one, and
+publishes the release with the changelog section as its notes.
 
 ## License
 
@@ -154,4 +242,5 @@ notice is kept.
 
 It relies on [faster-whisper](https://github.com/SYSTRAN/faster-whisper)
 (MIT), OpenAI's Whisper models (MIT) and [PyAV](https://github.com/PyAV-Org/PyAV)
-(BSD). These are downloaded by the installer, not bundled with AutoSubs.
+(BSD). The offline builds include the Whisper `small` model under its MIT
+license.
