@@ -83,7 +83,8 @@ def test_make_archive_round_trip(tmp_path, fmt):
     assert (tmp_path / "unpacked" / "top" / "sub" / "data.txt").read_text(encoding="utf-8") == "hi"
 
 
-def _fake_build(tmp_path, name, doctor_output="[ok] models: none bundled", doctor_exit=0):
+def _fake_build(tmp_path, name, doctor_output="[ok] model: small (automatic choice): downloaded",
+                doctor_exit=0):
     """A build archive whose programs are small scripts."""
     app = tmp_path / "app"
     app.mkdir()
@@ -118,6 +119,11 @@ def test_smoke_test_checks_the_offline_model(tmp_path):
     archive = _fake_build(tmp_path, "vlc-autosubs-x-linux-x64-offline-small.tar.gz")
     with pytest.raises(release.ReleaseError, match="small model"):
         release.smoke_test(archive)
+    (tmp_path / "app").rename(tmp_path / "old-app")
+    included = _fake_build(
+        tmp_path, "vlc-autosubs-x-linux-x64-offline-small.tar.gz",
+        doctor_output="[ok] model: small (automatic choice): included in this download")
+    assert "included" in release.smoke_test(included)
 
 
 @POSIX_ONLY

@@ -54,9 +54,9 @@ def _extract(archive, dest):
     return os.path.join(dest, tops.pop())
 
 
-def _run(cmd):
+def _run(cmd, env=None):
     proc = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8",
-                          errors="replace", timeout=300)
+                          errors="replace", timeout=300, env=env)
     output = proc.stdout + proc.stderr
     if proc.returncode != 0:
         raise ReleaseError(f"`{' '.join(cmd[1:])}` failed ({proc.returncode}):\n{output}")
@@ -77,11 +77,20 @@ def smoke_test(archive):
             if os.name != "nt" and not os.stat(program).st_mode & stat.S_IXUSR:
                 raise ReleaseError(f"{os.path.basename(program)} in {name} isn't executable")
 
-        version = _run([exe, "--version"]).strip()
+        # A fresh home folder, so an AutoSubs installed on this computer
+        # (its settings and downloaded models) doesn't affect the result.
+        home = os.path.join(tmp, "home")
+        os.makedirs(home)
+        env = dict(os.environ, HOME=home, USERPROFILE=home, APPDATA=os.path.join(home, "AppData"),
+                   XDG_DATA_HOME=os.path.join(home, "data"),
+                   XDG_CONFIG_HOME=os.path.join(home, "config"))
+
+        version = _run([exe, "--version"], env).strip()
         if version != f"AutoSubs {__version__}":
             raise ReleaseError(f"{name} reports {version!r}, expected 'AutoSubs {__version__}'")
-        doctor = _run([exe, "doctor"])
+        doctor = _run([exe, "doctor"], env)
         offline = re.search(r"-offline-(.+?)\.(?:zip|tar\.gz)$", name)
-        if offline and f"bundled: {offline.group(1)}" not in doctor:
-            raise ReleaseError(f"{name} should bundle the {offline.group(1)} model:\n{doctor}")
+        if offline and not re.search(rf"model: {re.escape(offline.group(1))}\b[^\n]*"
+                                     r"included in this download", doctor):
+            raise ReleaseError(f"{name} should include the {offline.group(1)} model:\n{doctor}")
         return doctor

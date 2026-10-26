@@ -46,8 +46,10 @@ Unpack it, then:
   The first command is needed because the app isn't notarized by Apple.
 - **Linux:** in the unpacked folder, run `./vlc-autosubs install`
 
-The installer copies AutoSubs into VLC's folder, so you can delete the
-download afterwards. The `vlc-autosubs` command used below then lives at:
+The installer asks which translation quality you want (see
+[Choosing a model](#choosing-a-model); just press Enter for the one it
+recommends), downloads it, and copies AutoSubs into VLC's folder, so you can
+delete the download afterwards. The `vlc-autosubs` command used below then lives at:
 
 | | Installed command |
 | --- | --- |
@@ -72,6 +74,8 @@ computer doesn't matter. Git is not needed.
    uv tool install https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs/archive/refs/heads/main.zip
    vlc-autosubs install
    ```
+   The second command asks which translation quality you want; press Enter
+   for the recommended one.
    If `vlc-autosubs` isn't found, run `uv tool update-shell`, open a new
    terminal and try again.
 
@@ -93,8 +97,9 @@ Start VLC and play a video. To check that everything is in order, run
 vlc-autosubs doctor            # or: vlc-autosubs doctor "some video.mkv"
 ```
 
-Install options: `--model medium` picks a model, `--manual-only` skips
-automatic mode, and `--download-model small` fetches a model right away.
+Install options: `--model medium` picks a model without asking (as do
+scripts, which are never asked), `--manual-only` skips automatic mode, and
+`--download-model small` fetches a model right away.
 `vlc-autosubs --help` lists all commands.
 
 ## Using it
@@ -114,16 +119,26 @@ video gets the CPU. The stopped video starts over the next time you play it.
 
 ## Choosing a model
 
-| Model | Download | Quality | Notes |
-| --- | --- | --- | --- |
-| `tiny`, `base` | 75–150 MB | rough | for slow machines |
-| `small` | ~500 MB | decent | **default without a GPU**; in the offline builds |
-| `medium` | ~1.5 GB | good | CPU is fine if your machine is fast enough |
-| `large-v3` | ~3 GB | best | **default with an NVIDIA GPU** |
+The installer asks which translation quality you want, and suggests one for
+your computer. Just press Enter to take the suggestion.
 
-Change it with `vlc-autosubs install --model medium`, or in `autosubs.conf`.
-On a CPU, `small` usually runs faster than real time. If subtitles can't keep
-up with playback, choose a smaller model.
+| Choice | Model | Download | Good to know |
+| --- | --- | --- | --- |
+| **Fast** | `small` | 480 MB | keeps up with the video on most computers; suggested unless you have an NVIDIA graphics card; included in the offline downloads |
+| **Better** | `medium` | 1.5 GB | more accurate; without an NVIDIA graphics card, usually several times slower than the video |
+| **Best** | `large-v3` | 3 GB | most accurate; suggested with an NVIDIA graphics card, which it needs to keep up |
+
+For a sense of speed: on a 4-core test machine without a graphics card, a
+40-second clip took about 6 seconds with Fast, 2½ minutes with Better and
+4 minutes with Best. The slower choices still work: pause the video for a
+while to let the subtitles get ahead. Once a video is done, its subtitles are
+saved and appear instantly every time after that.
+
+**To change your choice later,** run the installer again (`vlc-autosubs
+install`; for downloads, double-click `vlc-autosubs.exe` again, or use the
+installed command from the table under Option 1). For scripts and other
+setups, `vlc-autosubs install --model <name>` sets it without asking, and also
+accepts `tiny` and `base`, which are smaller and rougher.
 
 **Why only Whisper models?** AutoSubs needs *speech in any language → English
 text*, including languages like Japanese and Russian, on an ordinary computer.

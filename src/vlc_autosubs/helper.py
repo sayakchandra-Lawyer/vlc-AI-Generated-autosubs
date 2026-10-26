@@ -238,10 +238,6 @@ def resolve_model(name):
     return name
 
 
-MODEL_SIZES = {"tiny": "75 MB", "base": "145 MB", "small": "480 MB",
-               "medium": "1.5 GB", "large-v3": "3 GB"}
-
-
 def quiet_huggingface():
     """Hide two harmless Hugging Face warnings that read like errors: no
     symlink support (normal on Windows; we keep one copy of each model, so
@@ -258,8 +254,9 @@ def download_model(name, output_dir=None):
     return fw_download(name, output_dir=output_dir)
 
 
-def doctor(media=None):
-    """Check that the speech stack works; returns a list of (check, ok, detail)."""
+def doctor(media=None, model=None):
+    """Check that the speech stack works; returns a list of (check, ok, detail).
+    `model` is the model setting from autosubs.conf (None or "auto": the default)."""
     results = []
 
     def check(name, fn):
@@ -290,15 +287,15 @@ def doctor(media=None):
         audio = decode_audio(media)
         return f"decoded {len(audio) / 16000:.1f} s of audio from {media}"
 
-    def models():
-        bundled = bundled_models_dir()
-        if bundled and os.path.isdir(bundled):
-            return "bundled: " + (", ".join(sorted(os.listdir(bundled))) or "none")
-        return "none bundled; downloaded on first use"
+    def model_status():
+        from vlc_autosubs import models
+        name = models.effective(model)
+        auto = model in (None, "", "auto")
+        return f"{name}{' (automatic choice)' if auto else ''}: {models.status(name)}"
 
     check("speech engine", cuda)
     check("voice detection", vad)
-    check("models", models)
+    check("model", model_status)
     if media:
         check("audio decoding", decode)
     return results

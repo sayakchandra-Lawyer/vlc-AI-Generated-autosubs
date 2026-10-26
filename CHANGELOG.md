@@ -10,7 +10,11 @@
   Git isn't needed.
 - The code is now a regular Python package (`src/vlc_autosubs`, managed with
   `pyproject.toml` and `uv.lock`) instead of a zip file.
-- New commands: `vlc-autosubs doctor` checks that everything works, and
+- The installer asks which translation quality you want (Fast, Better or
+  Best), suggests one based on your computer, and downloads it right away,
+  so nobody has to pick a model from the command line.
+- New commands: `vlc-autosubs doctor` checks that everything works,
+  including whether your model is downloaded, and
   `vlc-autosubs download-model` fetches a model ahead of time.
 - Fixed: on Windows, the helper could crash the first time it downloaded a
   model (its progress bar had no console to write to).

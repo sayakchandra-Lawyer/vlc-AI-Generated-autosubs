@@ -210,14 +210,19 @@ def install(model=None, manual_only=False):
 
     if not manual_only:
         edit_vlcrc(True)
-    print("\nDone. Start VLC and play a video" +
-          ("." if manual_only else " — English subtitles appear automatically.") +
-          "\nManual mode: View > Auto English Subtitles (macOS: VLC > Extensions).")
+
+
+def finish_message(manual_only=False):
+    """What to tell people once everything, including the model, is in place."""
+    text = ("\nDone. Start VLC and play a video" +
+            ("." if manual_only else " — English subtitles appear automatically.") +
+            "\nManual mode: View > Auto English Subtitles (macOS: VLC > Extensions).")
     if FROZEN:
         cli = installed_cli()
-        print(f"\nAutoSubs is now installed in {os.path.dirname(cli)}; you can delete "
-              f"the downloaded folder.\nTo check or remove it later, run:\n"
-              f'  "{cli}" doctor\n  "{cli}" uninstall')
+        text += (f"\n\nAutoSubs is now installed in {os.path.dirname(cli)}; you can delete "
+                 f"the downloaded folder.\nTo check or remove it later, run:\n"
+                 f'  "{cli}" doctor\n  "{cli}" uninstall')
+    return text
 
 
 def uninstall():
