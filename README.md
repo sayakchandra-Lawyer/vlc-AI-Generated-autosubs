@@ -229,8 +229,14 @@ src/vlc_autosubs/
   installer.py    copies the Lua scripts into VLC, edits vlcrc
   helper.py       the background job: Whisper → .srt snapshots
   lua/            the VLC side (interface script, extension, shared module)
-devtools/         build and release commands (a uv workspace member, so
+devtools/         build and release tools (a uv workspace member, so
                   people installing AutoSubs don't get them)
+  pyinstaller/    the PyInstaller recipe (vlc-autosubs.spec) and entry scripts
+  src/autosubs_devtools/
+    build.py      the build pipeline: app folder → docs, model → archive
+    buildinfo.py  what a build records (BUILDINFO.txt, requirements.txt)
+    release.py    release notes for a tag, smoke tests of builds
+    cli.py        the commands below
 tests/            pytest suite (uses a stand-in for Whisper, no model needed)
 ```
 
@@ -242,6 +248,8 @@ tests/            pytest suite (uses a stand-in for Whisper, no model needed)
 | `uv run autosubs-build` | standalone build for this platform → `dist/` |
 | `uv run autosubs-build --bundle-model small` | the same, with a model inside (offline build) |
 | `uv run autosubs-reproduce v1.1.0` | rebuild a tagged release from its locked dependencies → `dist/reproduced/` |
+| `uv run autosubs-smoke-test dist/*.tar.gz` | unpack builds and check they start, pass `doctor`, and (offline builds) contain their model |
+| `uv run autosubs-release-notes v1.1.0` | check a tag matches the version, and print its `CHANGELOG.md` section |
 
 Every build contains `BUILDINFO.txt` (version, commit, Python, platform) and
 `requirements.txt` with the exact package versions inside it.
@@ -257,7 +265,8 @@ which is handy for testing the VLC side without downloading a model.
 3. Push a tag: `git tag v1.1.0 && git push origin v1.1.0`
 
 GitHub Actions then builds all six downloads, smoke-tests each one, and
-publishes the release with the changelog section as its notes.
+publishes the release with the changelog section as its notes. The workflow
+only calls the commands above, so every step can also be run locally.
 
 ## License
 
