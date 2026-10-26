@@ -120,3 +120,36 @@ def test_harmless_huggingface_warnings_are_hidden():
         "assert hf_logging.get_logger('huggingface_hub').getEffectiveLevel() >= logging.ERROR\n"
     )
     subprocess.run([sys.executable, "-c", code], check=True)
+
+
+def test_doctor_says_whether_the_model_is_downloaded(fake_home, tmp_path):
+    # A fresh interpreter, because huggingface_hub reads HF_HUB_CACHE when it
+    # loads; the empty cache folder stands in for a model not downloaded yet.
+    import ast
+    import subprocess
+    import sys
+    from vlc_autosubs import installer
+    installer.write_conf({"model": "medium"})
+    cache = tmp_path / "hf-cache"
+    env = dict(os.environ, HF_HUB_CACHE=str(cache), HF_HUB_OFFLINE="1")
+    code = ("from vlc_autosubs import helper\n"
+            "print({name: (ok, detail) for name, ok, detail in helper.doctor()}['model'])\n")
+
+    def model_check():
+        out = subprocess.run([sys.executable, "-c", code], env=env, check=True,
+                             capture_output=True, text=True).stdout
+        return ast.literal_eval(out.strip().splitlines()[-1])
+
+    not_yet = (True, "medium (not downloaded yet; downloads on first use, 1.5 GB)")
+    assert model_check() == not_yet
+
+    # An interrupted download: the small files arrived, model.bin didn't.
+    snapshot = cache / "models--Systran--faster-whisper-medium" / "snapshots" / "abc123"
+    snapshot.mkdir(parents=True)
+    (snapshot.parent.parent / "refs").mkdir()
+    (snapshot.parent.parent / "refs" / "main").write_text("abc123")
+    (snapshot / "config.json").write_text("{}")
+    assert model_check() == not_yet
+
+    (snapshot / "model.bin").write_bytes(b"")
+    assert model_check() == (True, "medium (downloaded)")

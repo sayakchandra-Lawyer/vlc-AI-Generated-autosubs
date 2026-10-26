@@ -181,7 +181,13 @@ are kept in the Hugging Face cache (`~/.cache/huggingface`).
 ## Troubleshooting
 
 - **Run `vlc-autosubs doctor` first.** It checks the speech engine, voice
-  detection and (given a video) audio decoding.
+  detection, the Whisper model and (given a video) audio decoding.
+- **Did the model download finish?** `doctor`'s model line names the model
+  AutoSubs will use and says whether it's ready, for example
+  `[ok] model: medium (downloaded)` or
+  `[ok] model: medium (not downloaded yet; downloads on first use, 1.5 GB)`.
+  An interrupted download counts as not downloaded; run
+  `vlc-autosubs download-model medium` again to finish it.
 - **Nothing happens.** In VLC, open Tools → Messages, set verbosity to 2 and
   look for lines with `autosubs`. If none appear, automatic mode isn't on:
   run `vlc-autosubs install` again, or use manual mode.

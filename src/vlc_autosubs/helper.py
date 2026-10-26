@@ -198,7 +198,8 @@ def write_srt(path, cues):
 # speech translation
 # --------------------------------------------------------------------------
 
-def pick_model(job, log):
+def choose_model(job):
+    """The Whisper model, device and compute type a job will use."""
     import ctranslate2
     device = job.get("device", "auto")
     if device == "auto" and getattr(sys, "frozen", False):
@@ -216,6 +217,11 @@ def pick_model(job, log):
         # (Note: "turbo"/"large-v3-turbo" was not trained to translate.)
         model = "large-v3" if device == "cuda" else "small"
     compute = "float16" if device == "cuda" else "int8"
+    return model, device, compute
+
+
+def pick_model(job, log):
+    model, device, compute = choose_model(job)
     log(f"model={model} device={device} compute={compute}")
     return resolve_model(model), device, compute
 
@@ -250,6 +256,26 @@ def quiet_huggingface():
     os.environ.setdefault("HF_HUB_VERBOSITY", "error")
 
 
+def model_availability(name):
+    """Whether a model is already on this computer, in words."""
+    if os.path.isdir(name):
+        return "local folder"
+    if resolve_model(name) != name:
+        return "bundled"
+    quiet_huggingface()
+    from faster_whisper.utils import _MODELS  # model name -> Hugging Face repo
+    from huggingface_hub import try_to_load_from_cache
+    repo = name if "/" in name else _MODELS.get(name)
+    if repo is None:
+        raise ValueError(f"unknown model '{name}', expected one of: {', '.join(_MODELS)}")
+    # Only looks in the cache, never online. model.bin is the big file; it
+    # is missing until its download has finished.
+    if isinstance(try_to_load_from_cache(repo, "model.bin"), str):
+        return "downloaded"
+    size = MODEL_SIZES.get(name)
+    return "not downloaded yet; downloads on first use" + (f", {size}" if size else "")
+
+
 def download_model(name, output_dir=None):
     """Fetch a faster-whisper model (into the Hugging Face cache by default)."""
     quiet_huggingface()
@@ -259,6 +285,7 @@ def download_model(name, output_dir=None):
 
 def doctor(media=None):
     """Check that the speech stack works; returns a list of (check, ok, detail)."""
+    quiet_huggingface()  # faster_whisper imports huggingface_hub
     results = []
 
     def check(name, fn):
@@ -284,15 +311,18 @@ def doctor(media=None):
         audio = decode_audio(media)
         return f"decoded {len(audio) / 16000:.1f} s of audio from {media}"
 
-    def models():
-        bundled = bundled_models_dir()
-        if bundled and os.path.isdir(bundled):
-            return "bundled: " + (", ".join(sorted(os.listdir(bundled))) or "none")
-        return "none bundled; downloaded on first use"
+    def model():
+        from vlc_autosubs import installer
+        conf = installer.read_conf()
+        name, device, _compute = choose_model(conf)
+        label = name
+        if conf.get("model", "auto") == "auto":
+            label += f", picked by auto for the {'GPU' if device == 'cuda' else 'CPU'}"
+        return f"{label} ({model_availability(name)})"
 
     check("speech engine", cuda)
     check("voice detection", vad)
-    check("models", models)
+    check("model", model)
     if media:
         check("audio decoding", decode)
     return results
