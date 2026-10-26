@@ -1,5 +1,6 @@
 import os
 import re
+import tomllib
 
 from vlc_autosubs import __version__
 
@@ -22,7 +23,6 @@ def test_changelog_has_this_version_first():
 
 
 def test_users_only_get_the_vlc_autosubs_commands():
-    tomllib = __import__("pytest").importorskip("tomllib")
     project = tomllib.loads(read("pyproject.toml"))["project"]
     assert set(project["scripts"]) == {"vlc-autosubs"}
     assert set(project["gui-scripts"]) == {"vlc-autosubs-helper"}

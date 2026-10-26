@@ -162,6 +162,11 @@ helper=…                  # set by `vlc-autosubs install`; don't edit
 | Linux Snap/Flatpak VLC | not supported (sandboxed, can't start the helper) |
 | VLC 4 (beta) | not tested |
 
+The uv install needs Python 3.11 or newer; CI tests 3.11, 3.12, 3.13 and 3.14
+on Windows, macOS and Linux. uv picks a suitable Python by itself and
+downloads one if needed, so an older Python (such as 3.10) on your computer
+does no harm. The downloads in Option 1 include their own Python.
+
 Found a problem, or tried it on a platform listed as untested? Please
 [open an issue](https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs/issues)
 and include the output of `vlc-autosubs doctor` and the last lines of the log
