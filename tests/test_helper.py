@@ -120,3 +120,12 @@ def test_harmless_huggingface_warnings_are_hidden():
         "assert hf_logging.get_logger('huggingface_hub').getEffectiveLevel() >= logging.ERROR\n"
     )
     subprocess.run([sys.executable, "-c", code], check=True)
+
+
+def test_doctor_suggests_the_missing_file_extension(sample_wav):
+    # e.g. "Film [Level 1]" typed for "Film [Level 1].mp4" (Windows hides extensions)
+    without_ext = str(sample_wav)[: -len(".wav")]
+    results = {name: (ok, detail) for name, ok, detail in helper.doctor(without_ext)}
+    ok, detail = results["audio decoding"]
+    assert not ok
+    assert f'did you mean "{sample_wav}"' in detail

@@ -13,6 +13,7 @@ Only one helper runs at a time: a new job stops the previous one, so the
 video you are watching now always gets the CPU/GPU.
 """
 
+import glob
 import os
 import signal
 import sys
@@ -279,6 +280,11 @@ def doctor(media=None):
         return "Silero VAD runs"
 
     def decode():
+        if not os.path.exists(media):
+            # Windows hides file extensions, so people often leave them off.
+            matches = sorted(glob.glob(glob.escape(media) + ".*"))
+            hint = f"; did you mean \"{matches[0]}\"?" if matches else ""
+            raise FileNotFoundError(f"no such file \"{media}\"{hint}")
         from faster_whisper import decode_audio
         patch_pyav()
         audio = decode_audio(media)
