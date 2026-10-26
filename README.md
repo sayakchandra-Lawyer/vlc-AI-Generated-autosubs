@@ -69,9 +69,10 @@ computer doesn't matter. Git is not needed.
    - macOS / Linux: `curl -LsSf https://astral.sh/uv/install.sh | sh`
 2. Quit VLC, then:
    ```
-   uv tool install https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs/archive/refs/heads/main.zip
+   uv tool install --python 3.13 https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs/archive/refs/heads/main.zip
    vlc-autosubs install
    ```
+   (`--python 3.13`: see [Supported platforms](#supported-platforms).)
    If `vlc-autosubs` isn't found, run `uv tool update-shell`, open a new
    terminal and try again.
 
@@ -162,10 +163,15 @@ helper=…                  # set by `vlc-autosubs install`; don't edit
 | Linux Snap/Flatpak VLC | not supported (sandboxed, can't start the helper) |
 | VLC 4 (beta) | not tested |
 
-The uv install needs Python 3.11 or newer; CI tests 3.11, 3.12, 3.13 and 3.14
-on Windows, macOS and Linux. uv picks a suitable Python by itself and
-downloads one if needed, so an older Python (such as 3.10) on your computer
-does no harm. The downloads in Option 1 include their own Python.
+The uv install works with Python 3.11 to 3.14; CI tests all four on Windows,
+macOS and Linux. Python 3.15 isn't supported yet: onnxruntime, which the
+speech recognition needs, has no packages for it so far, and AutoSubs will
+allow 3.15 once it does. On Intel Macs, onnxruntime only goes up to Python
+3.13. So the install command asks uv for Python 3.13, which works
+everywhere; without `--python`, uv may choose 3.15 and the install fails. uv
+downloads Python 3.13 if needed, so whichever Python is already on your
+computer (such as 3.10 or 3.15) does no harm. The downloads in Option 1
+include their own Python.
 
 Found a problem, or tried it on a platform listed as untested? Please
 [open an issue](https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs/issues)

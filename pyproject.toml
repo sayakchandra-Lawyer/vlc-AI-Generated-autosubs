@@ -6,7 +6,12 @@ readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Sayak Chandra" }]
-requires-python = ">=3.11"
+# <3.15: onnxruntime (needed by faster-whisper) has no Python 3.15 wheels
+# yet. When it has them: lift the cap here and in devtools/pyproject.toml,
+# run `uv lock`, add "3.15" to the CI matrix and update README's "Supported
+# platforms". uv ignores this when it picks a Python for `uv tool install
+# <zip URL>`, hence `--python 3.13` in the README's install command.
+requires-python = ">=3.11,<3.15"
 keywords = ["vlc", "subtitles", "whisper", "translation", "speech-to-text", "srt"]
 classifiers = [
     "Environment :: Plugins",
