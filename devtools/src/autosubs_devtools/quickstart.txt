@@ -1,0 +1,21 @@
+AutoSubs {version} for {platform}
+=============================
+Automatic English subtitles for VLC. Full guide:
+https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs
+
+1. Quit VLC.
+2. Install:
+   Windows: double-click vlc-autosubs.exe
+            (SmartScreen warning: More info > Run anyway)
+   macOS:   open Terminal in this folder and run
+              xattr -dr com.apple.quarantine .
+              ./vlc-autosubs install
+   Linux:   ./vlc-autosubs install
+3. Start VLC and play a video.
+
+The installer copies AutoSubs into VLC's folder and prints where, so you can
+delete this folder afterwards. To check or remove AutoSubs later, run that
+copy with "doctor" or "uninstall":
+   Windows: "%APPDATA%\vlc\autosubs\app\vlc-autosubs.exe" uninstall
+   macOS:   ~/"Library/Application Support/org.videolan.vlc/autosubs/app/vlc-autosubs" uninstall
+   Linux:   ~/.local/share/vlc/autosubs/app/vlc-autosubs uninstall

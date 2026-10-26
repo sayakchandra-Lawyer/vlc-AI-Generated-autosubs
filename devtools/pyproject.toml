@@ -13,8 +13,10 @@ dependencies = [
 ]
 
 [project.scripts]
-autosubs-build = "autosubs_devtools:build_main"
-autosubs-reproduce = "autosubs_devtools:reproduce_main"
+autosubs-build = "autosubs_devtools.cli:build_main"
+autosubs-reproduce = "autosubs_devtools.cli:reproduce_main"
+autosubs-smoke-test = "autosubs_devtools.cli:smoke_test_main"
+autosubs-release-notes = "autosubs_devtools.cli:release_notes_main"
 
 [tool.uv.sources]
 vlc-autosubs = { workspace = true }
