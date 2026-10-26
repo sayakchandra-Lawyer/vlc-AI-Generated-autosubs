@@ -2,6 +2,22 @@ import pytest
 
 from vlc_autosubs import cli, helper, installer, models
 
+is_really_downloaded = models.is_downloaded  # before the fixture below swaps it
+
+
+def test_interrupted_download_is_not_downloaded(tmp_path):
+    # Hugging Face cache layout: refs/main names the snapshot folder.
+    repo = tmp_path / "models--Systran--faster-whisper-medium"
+    snapshot = repo / "snapshots" / "abc123"
+    snapshot.mkdir(parents=True)
+    (repo / "refs").mkdir()
+    (repo / "refs" / "main").write_text("abc123")
+    (snapshot / "config.json").write_text("{}")  # the small files came first
+    assert not is_really_downloaded("medium", cache_dir=str(tmp_path))
+    (snapshot / "model.bin").write_bytes(b"weights")
+    assert is_really_downloaded("medium", cache_dir=str(tmp_path))
+    assert not is_really_downloaded("small", cache_dir=str(tmp_path))
+
 
 @pytest.fixture(autouse=True)
 def nothing_downloaded(monkeypatch):

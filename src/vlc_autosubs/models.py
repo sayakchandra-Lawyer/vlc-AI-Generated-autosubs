@@ -1,5 +1,6 @@
 """The Whisper models people choose between, and the installer's question."""
 
+import os
 import sys
 
 from vlc_autosubs import helper
@@ -46,17 +47,18 @@ def is_included(name):
     return helper.resolve_model(name) != name
 
 
-def is_downloaded(name):
-    """Usable without downloading: included, or already in the download cache."""
-    if is_included(name):
+def is_downloaded(name, cache_dir=None):
+    """Usable without downloading: included, or completely in the download
+    cache. Never goes online. Only model.bin (the big file) counts: it appears
+    once fully downloaded, so an interrupted download isn't taken for a
+    finished one. (Approach from pull request #2.)"""
+    if os.path.isdir(name) or is_included(name):
         return True
     helper.quiet_huggingface()
-    try:
-        from faster_whisper import download_model
-        download_model(name, local_files_only=True)
-        return True
-    except Exception:
-        return False
+    from faster_whisper import utils
+    from huggingface_hub import try_to_load_from_cache
+    repo = getattr(utils, "_MODELS", {}).get(name, f"Systran/faster-whisper-{name}")
+    return isinstance(try_to_load_from_cache(repo, "model.bin", cache_dir=cache_dir), str)
 
 
 def status(name):

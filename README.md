@@ -83,7 +83,7 @@ computer doesn't matter. Git is not needed.
 To update to the latest code, run the first command again with
 `--reinstall --refresh` added, then `vlc-autosubs install` again. To install a
 specific release instead, use its tag's zip, for example
-`https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs/archive/refs/tags/v1.1.0.zip`.
+`https://github.com/sayakchandra-Lawyer/vlc-AI-Generated-autosubs/archive/refs/tags/v1.2.0.zip`.
 
 This is also the way to go for **NVIDIA GPUs**: with CUDA 12 and cuDNN 9
 installed, AutoSubs uses the GPU and the more accurate `large-v3` model by

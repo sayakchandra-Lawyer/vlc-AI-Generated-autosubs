@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.2.0 — 2026-10-26
+
+- **Choose the translation quality while installing.** The installer asks
+  Fast, Better or Best, suggests one for your computer (Best with an NVIDIA
+  graphics card, otherwise Fast, the only one that keeps up on a laptop
+  processor) and downloads it right away. Press Enter to take the
+  suggestion. Scripts and `--model` are never asked.
+- `vlc-autosubs doctor` shows which model is set up and whether it's
+  downloaded. An interrupted download no longer counts as downloaded, so the
+  installer finishes it instead of skipping it.
+- The uv install needs Python 3.11 to 3.14, and its command now asks uv for
+  Python 3.13: onnxruntime, which the speech recognition needs, has no
+  packages for Python 3.15 yet, nor for Intel Macs beyond 3.13. CI tests
+  Python 3.11 to 3.14 on Windows, macOS and Linux.
+
 ## 1.1.0 — 2026-10-25
 
 - **Ready-made downloads** for Windows, macOS (Apple Silicon) and Linux that
@@ -10,11 +25,7 @@
   Git isn't needed.
 - The code is now a regular Python package (`src/vlc_autosubs`, managed with
   `pyproject.toml` and `uv.lock`) instead of a zip file.
-- The installer asks which translation quality you want (Fast, Better or
-  Best), suggests one based on your computer, and downloads it right away,
-  so nobody has to pick a model from the command line.
-- New commands: `vlc-autosubs doctor` checks that everything works,
-  including whether your model is downloaded, and
+- New commands: `vlc-autosubs doctor` checks that everything works, and
   `vlc-autosubs download-model` fetches a model ahead of time.
 - Fixed: on Windows, the helper could crash the first time it downloaded a
   model (its progress bar had no console to write to).

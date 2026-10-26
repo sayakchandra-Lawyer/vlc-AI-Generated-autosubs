@@ -13,7 +13,7 @@ local core, state, dlg, lbl
 function descriptor()
   return {
     title = "Auto English Subtitles",
-    version = "1.1.0",
+    version = "1.2.0",
     author = "Sayak Chandra",
     shortdesc = "Auto English Subtitles",
     description = "Generates English subtitles for the playing video with "
