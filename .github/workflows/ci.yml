@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:  # "Run workflow" on the Actions tab tests any branch
 
 jobs:
   test:
@@ -11,10 +12,16 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        # Every Python that requires-python allows, since `uv tool install`
+        # may pick any of them for users. .python-version (3.12) is only for
+        # development and builds.
+        python: ["3.11", "3.12", "3.13", "3.14"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python }}  # sets UV_PYTHON for the uv commands below
       - run: uv sync --locked
       - run: uv run pytest -v
 
